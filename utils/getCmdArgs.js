@@ -10,7 +10,7 @@
 const getFiltersFromCmdArgs = () => {
   const cmdArgs = process.argv.slice(2);
 
-  const knownFilters = ["location", "searchTerm", "javascript", "modality"];
+  const knownFilters = ["location", "searchTerm", "date", "modality"];
   const knownOperators = ["AND", "OR", "&&", "||"];
 
   const filters = cmdArgs.reduce((acc = {}, arg) => {
