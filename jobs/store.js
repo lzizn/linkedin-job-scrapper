@@ -1,56 +1,23 @@
 const fs = require("node:fs");
-const puppeteer = require("puppeteer");
-const { parse } = require("./parse");
+const path = require("node:path");
 
-const { waitFor } = require("../utils/waitFor");
+const json2csv = require("json2csv");
 
 /**
  * @param {puppeteer.Page} page
  */
-const store = async (page) => {
-  const jobCards = await page.$$('li[class*="jobs-search-results__list-item"]');
+const storeJobs = async (jobsParsed, pageNumber) => {
+  const fileInfo = {
+    path: path.resolve(
+      __dirname,
+      "..",
+      "outputs",
+      `${pageNumber}-${new Date().toISOString()}.json`
+    ),
+    body: JSON.stringify(jobsParsed, null, 2),
+  };
 
-  if (jobCards.length === 0) {
-    console.error("Could not get jobs");
-    await page.close();
-    process.exit(1);
-  }
-
-  const jobsParsed = [];
-
-  for (const card of jobCards) {
-    const jobDetails = await page.$('div[class*="jobs-search__job-details"]');
-    if (jobDetails == null) {
-      break;
-    }
-    const jobDetailsHTML = await page.evaluate(
-      (el) => el.innerHTML,
-      jobDetails
-    );
-
-    if (jobDetailsHTML) {
-      const { job } = parse(jobDetailsHTML);
-      await jobDetails.dispose();
-      jobsParsed.push(job);
-    }
-
-    // going to next job details
-    const jobLink = await card.$("a");
-    if (jobLink == null) {
-      break;
-    }
-
-    await jobLink.click();
-    await waitFor(2000);
-  }
-
-  // free memory
-  await Promise.all(jobCards.map(async (x) => x.dispose()));
-
-  fs.writeFileSync(
-    `jobs-parsed-${new Date().toISOString()}.json`,
-    JSON.stringify(jobsParsed, null, 2)
-  );
+  fs.writeFileSync(fileInfo.path, fileInfo.body);
 };
 
-module.exports = { store };
+module.exports = { storeJobs };

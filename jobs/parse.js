@@ -25,6 +25,9 @@ const getCompanyName = (jobDetails) => {
   return _name;
 };
 
+/**
+ * @param {string} jobDetailsHTML
+ */
 const parse = (jobDetailsHTML) => {
   const jobDetails = $_.load(jobDetailsHTML);
 
@@ -80,13 +83,13 @@ const parse = (jobDetailsHTML) => {
     .map((i, el) => cleanString($_.load(el).text()))
     .toArray();
 
-  const link =
+  const linkSrc =
     "https://linkedin.com" +
     jobDetails(
       'div[class*="job-details-jobs-unified-top-card__content--two-pane"] h2 a'
-    )
-      .attr("href")
-      .split("?alternateChannel")[0];
+    ).attr("href");
+
+  const link = (linkSrc + "").split("?")[0];
 
   const jobPostId = link.split("/").slice(5, -1)[0];
 
@@ -106,29 +109,27 @@ const parse = (jobDetailsHTML) => {
   ).split(" · ");
 
   return {
-    job: {
-      title,
-      applicantsAmount,
-      employmentType,
-      modality,
-      level,
-      postCreatedAt: createdAtStatic,
-      skills: requiredSkills,
-      hasEasyApply,
-      description,
-      qualifications,
-      link,
-      jobPostId,
-      // add dynamic created at (_meta.handledAt - static createdAt)
-      company: {
-        name: companyName,
-        link: companyLink,
-        size: companySize,
-        category: companyCategory,
-      },
-      _meta: {
-        handledAt: new Date().toISOString(),
-      },
+    title,
+    applicantsAmount,
+    employmentType,
+    modality,
+    level,
+    postCreatedAt: createdAtStatic,
+    skills: requiredSkills,
+    hasEasyApply,
+    description,
+    qualifications,
+    link,
+    jobPostId,
+    // add dynamic created at (_meta.handledAt - static createdAt)
+    company: {
+      name: companyName,
+      link: companyLink,
+      size: companySize,
+      category: companyCategory,
+    },
+    _meta: {
+      handledAt: new Date().toISOString(),
     },
   };
 };

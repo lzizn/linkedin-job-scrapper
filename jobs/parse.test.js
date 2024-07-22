@@ -12,7 +12,7 @@ describe("JOBS.parse - parse HTML to JS object", () => {
       path.resolve(__dirname, "..", "mocks", "easyApplyJobDetails.html")
     );
 
-    const { job } = parse(mockHTML);
+    const job = parse(mockHTML);
 
     delete job._meta;
     delete job.description;
@@ -47,7 +47,7 @@ describe("JOBS.parse - parse HTML to JS object", () => {
       path.resolve(__dirname, "..", "mocks", "normalApplyJonDetails.html")
     );
 
-    const { job } = parse(mockHTML);
+    const job = parse(mockHTML);
 
     delete job._meta;
     delete job.description;

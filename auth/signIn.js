@@ -4,12 +4,13 @@ require("dotenv").config();
 
 /**
  *
- * @param {puppeteer.Page} page
- * @returns
+ * @param {puppeteer.Browser} browser
  */
-async function signIn(page) {
-  const LINKEDIN_HOME_SCREEN = "https://www.linkedin.com/home";
-  await page.goto(LINKEDIN_HOME_SCREEN);
+async function signIn(browser) {
+  const page = await browser.newPage();
+
+  const LINKEDIN_LOGIN_PAGE = "https://www.linkedin.com/login?fromSignIn=true";
+  await page.goto(LINKEDIN_LOGIN_PAGE);
 
   const emailInput = await page.$('input[type="text"]');
   const passwordInput = await page.$('input[type="password"]');
@@ -18,20 +19,21 @@ async function signIn(page) {
     console.error("Could not find input for either password or email", {
       emailInput,
       passwordInput,
+      cookies,
     });
-    return null;
+    await page.close();
+    process.exit(1);
   }
 
   await emailInput.type(process.env.LINKEDIN_EMAIL, { delay: 40 });
   await passwordInput.type(process.env.LINKEDIN_PASSWORD, { delay: 90 });
 
-  const signInButton = await page.$(
-    'button[data-id="sign-in-form__submit-btn"]'
-  );
+  const signInButton = await page.$('button[type="submit"]');
 
   if (signInButton == null) {
     console.error("Could not find SignIn button");
-    return null;
+    await page.close();
+    process.exit(1);
   }
 
   await signInButton.click();

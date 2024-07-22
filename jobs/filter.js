@@ -22,16 +22,14 @@ const modalityOptions = {
 
 /**
  *
- * @param {puppeteer.Page} page
- * @param {{
- *    date: "last24Hours" | "pastWeek" | "pastMonth",
- *    modality: "hybrid" | "onSite" | "remote",
- *    searchTerm: string,
- *    location: string
- *    offset: number
- * }} param1
+ * @param {Object} filters
+ * @param {"last24Hours" | "pastWeek" | "pastMonth"} filters.date
+ * @param {"hybrid" | "onSite" | "remote"} filters.modality
+ * @param {string} filters.searchTerm
+ * @param {string} filters.location
  */
-async function filter(page, { date, modality, searchTerm, location, offset }) {
+async function applyFilters(filters) {
+  const { date, location, modality, searchTerm } = filters;
   let BASE_URL = "https://www.linkedin.com/jobs/search/?";
 
   if (date) {
@@ -45,14 +43,8 @@ async function filter(page, { date, modality, searchTerm, location, offset }) {
   BASE_URL += "&keywords=" + searchTerm;
   BASE_URL += "&location=" + location;
   BASE_URL += "&origin=JOBS_HOME_LOCATION_HISTORY&refresh=true";
-  BASE_URL += "&start=" + offset;
 
-  await page.goto(BASE_URL);
-  await waitFor(2000);
-
-  const hasNextPage = false;
-
-  return hasNextPage;
+  return BASE_URL;
 }
 
-module.exports = { filter };
+module.exports = { applyFilters };

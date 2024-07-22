@@ -4,14 +4,16 @@ const puppeteer = require("puppeteer");
 
 const { signIn } = require("./auth/signIn");
 
-const { filter } = require("./jobs/filter");
-const { store } = require("./jobs/store");
+const { storeJobs } = require("./jobs/store");
+const { parsePage } = require("./jobs/parsePage");
+const { applyFilters } = require("./jobs/filter");
 
 const { getFiltersFromCmdArgs } = require("./utils/getCmdArgs");
 
 const JOBS = {
-  filter,
-  store,
+  parsePage,
+  applyFilters,
+  store: storeJobs,
 };
 
 const AUTH = {
@@ -28,26 +30,30 @@ async function scrape() {
       height: 900,
     },
   });
-  const page = await browser.newPage();
 
-  const pageSignedIn = await AUTH.signIn(page);
+  const page = await AUTH.signIn(browser);
 
-  if (pageSignedIn == null) {
-    await page.close();
-    process.exit(1);
-  }
+  let pageNumber = 1;
+  let nextPageButton = null;
 
-  let offset = 0;
-  while (true) {
-    if (offset === 75) break;
+  const jobsUrl = await JOBS.applyFilters(filters);
+  await page.goto(jobsUrl);
 
-    await JOBS.filter(pageSignedIn, {
-      ...filters,
-      offset,
-    });
-    await JOBS.store(pageSignedIn);
-    offset += 25;
-  }
+  do {
+    if (pageNumber > 1) {
+      await Promise.all([page.waitForNavigation(), nextPageButton.click()]);
+    }
+
+    const jobsParsed = await JOBS.parsePage(page, pageNumber);
+
+    await JOBS.store(jobsParsed, pageNumber);
+
+    nextPageButton = await page.$(
+      `button[aria-label="Page ${pageNumber + 1}"]`
+    );
+
+    pageNumber += 1;
+  } while (nextPageButton !== null);
 
   process.exit(1);
 }
